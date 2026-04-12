@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  publicKey     String   @unique
+  name          String?
+  email         String?  @unique
+  isKycVerified Boolean  @default(false)
+  kycVerifiedAt DateTime?
+  kycData       Json?
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  transactions  Transaction[]
+
+  @@map("users")
+}
+
+model Transaction {
+  id                  String   @id @default(cuid())
+  userId              String
+  recipientAddress     String
+  amount              Decimal
+  currency            String
+  fee                 Decimal
+  message             String?
+  status              TransactionStatus @default(PENDING)
+  type                TransactionType @default(SENT)
+  totalAmount         Decimal
+  stellarTransactionId String?
+  stellarTransactionXdr String?
+  stellarResult        Json?
+  completedAt         DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
+
+model ExchangeRate {
+  id        String   @id @default(cuid())
+  fromCurrency String
+  toCurrency String
+  rate       Decimal
+  source     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([fromCurrency, toCurrency])
+  @@map("exchange_rates")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  resource  String
+  details   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  EXPIRED
+}
+
+enum TransactionType {
+  SENT
+  RECEIVED
+}
