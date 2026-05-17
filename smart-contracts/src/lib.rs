@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, contracterror, Address, Env, Symbol, symbol_short, token};
+use soroban_sdk::{contract, contractimpl, contracttype, contracterror, Address, Env, Symbol, symbol_short};
 use soroban_sdk::token::TokenClient;
 
 #[contracterror]
@@ -87,6 +87,8 @@ impl RemittanceContract {
             created_at: env.ledger().timestamp(),
         };
         env.storage().instance().set(&tx_key(tx_id), &tx);
+
+        sender.require_auth();
 
         let total = amount + fee;
         TokenClient::new(&env, &token_address).transfer(
