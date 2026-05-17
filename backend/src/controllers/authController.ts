@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { validationResult } from 'express-validator'
 import { prisma } from '../index'
-import { generateTokens, verifySignature } from '../utils/auth'
+import { generateTokens, verifyRefreshToken } from '../utils/auth'
 import { logger } from '../utils/logger'
 
 export const authController = {
@@ -86,8 +86,8 @@ export const authController = {
       }
 
       // Verify refresh token and get user
-      const user = await verifySignature(refreshToken, 'refresh')
-      if (!user) {
+      const decoded = verifyRefreshToken(refreshToken)
+      if (!decoded) {
         return res.status(401).json({
           success: false,
           error: 'Invalid refresh token',
@@ -95,7 +95,7 @@ export const authController = {
       }
 
       // Generate new tokens
-      const tokens = generateTokens(user.id)
+      const tokens = generateTokens(decoded.userId)
 
       res.json({
         success: true,

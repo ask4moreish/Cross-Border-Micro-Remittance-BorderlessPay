@@ -9,38 +9,26 @@ interface AuthenticatedRequest extends Request {
   }
 }
 
-export const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization
   const token = authHeader && authHeader.split(' ')[1]
 
   if (!token) {
-    return res.status(401).json({
-      success: false,
-      error: 'Access token required',
-    })
+    res.status(401).json({ success: false, error: 'Access token required' })
+    return
   }
 
-  try {
-    const decoded = verifyToken(token)
-    if (!decoded) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid token',
-      })
-    }
-
-    // In a real implementation, you would fetch user from database
-    req.user = {
-      id: decoded.userId,
-      publicKey: 'mock-public-key', // Would fetch from database
-      isKycVerified: false, // Would fetch from database
-    }
-
-    next()
-  } catch (error) {
-    return res.status(401).json({
-      success: false,
-      error: 'Invalid token',
-    })
+  const decoded = verifyToken(token)
+  if (!decoded) {
+    res.status(401).json({ success: false, error: 'Invalid token' })
+    return
   }
+
+  req.user = {
+    id: decoded.userId,
+    publicKey: 'mock-public-key',
+    isKycVerified: false,
+  }
+
+  next()
 }
