@@ -29,6 +29,27 @@ jobs:
       - name: Run tests
         run: npm test -- --ci --coverage
 
+  smart-contract-tests:
+    name: Smart Contract Tests (cargo)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: smart-contracts
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: smart-contracts
+
+      - name: Run tests
+        run: cargo test
+
   frontend-tests:
     name: Frontend Tests (Vitest)
     runs-on: ubuntu-latest
